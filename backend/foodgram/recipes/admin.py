@@ -1,0 +1,56 @@
+from django.contrib import admin
+from django.contrib.auth import get_user_model
+from recipes import models
+
+User = get_user_model()
+
+
+@admin.register(models.Recipe)
+class RecipeAdmin(admin.ModelAdmin):
+    """Параметры отображения модели рецепта."""
+
+    list_display = (
+        'name',
+        'author',
+    )
+    search_fields = ('author', 'name', 'tegs', )
+    empty_value_display = '-пусто-'
+
+
+@admin.register(models.Ingredient)
+class IngredientAdmin(admin.ModelAdmin):
+    """Параметры отображения модели ингредиента."""
+
+    list_display = (
+        'name',
+        'measurement_unit',
+    )
+    search_fields = ('name', )
+    empty_value_display = '-пусто-'
+
+
+@admin.register(models.Tag)
+class TagAdmin(admin.ModelAdmin):
+    """Параметры отображения модели тега."""
+
+    list_display = (
+        'name',
+        'slug',
+    )
+
+
+admin.site.unregister(User)
+
+
+@admin.register(User)
+class UserAdmin(admin.ModelAdmin):
+    """Параметры отображения модели пользователя."""
+
+    list_display = (
+        'first_name',
+        'last_name',
+        'username',
+        'email'
+    )
+    search_fields = ('email', 'username', )
+    empty_value_display = '-пусто-'
