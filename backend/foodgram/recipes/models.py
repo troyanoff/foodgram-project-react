@@ -13,7 +13,7 @@ class Ingredient(models.Model):
         max_length=10,
         choices=MEASUREMENT_UNITS,
         verbose_name='Единица измерения'
-        )
+    )
 
     class Meta:
         verbose_name = 'Ингредиент'
@@ -137,3 +137,24 @@ class ShopRecipe(models.Model):
         Recipe,
         on_delete=models.CASCADE
     )
+
+
+class Following(models.Model):
+    """Модель подписок и подписчиков."""
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='follower',
+        verbose_name='Подписчик',
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='following',
+        verbose_name='Автор',
+    )
+
+    class Meta:
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
