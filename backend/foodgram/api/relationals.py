@@ -9,4 +9,12 @@ class FollowRelatedField(serializers.RelatedField):
 
     def to_representation(self, value):
         user = self.context['request'].user
-        return value in user.following.all()
+        return user in value.following.all()
+
+
+class IngredientRelatedField(serializers.RelatedField):
+    """Зависилость моделей рецепта и ингредиента."""
+
+    def to_representation(self, value):
+        user = self.context['request'].user
+        return user in value.following.all()

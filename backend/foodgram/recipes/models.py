@@ -29,11 +29,12 @@ class RecipeIngredient(models.Model):
     recipe = models.ForeignKey('Recipe', on_delete=models.CASCADE)
     ingredient = models.ForeignKey(
         Ingredient,
+        related_name='ing_rec',
         on_delete=models.SET_NULL,
         blank=True,
         null=True
     )
-    quantity = models.IntegerField(verbose_name='Количество')
+    amount = models.IntegerField(verbose_name='Количество')
 
 
 class Tag(models.Model):
@@ -85,7 +86,7 @@ class Recipe(models.Model):
     text = models.TextField(blank=True, verbose_name='Описание')
     ingredients = models.ManyToManyField(
         Ingredient,
-        through='RecipeIngredient',
+        through=RecipeIngredient,
         verbose_name='Ингредиенты',
     )
     tags = models.ManyToManyField(
@@ -96,11 +97,11 @@ class Recipe(models.Model):
     cooking_time = models.IntegerField(verbose_name='Время приготовления')
     is_favorited = models.BooleanField(
         default=False,
-        verbose_name='В спистке избранного'
+        verbose_name='В списке избранного'
     )
     is_in_shopping_cart = models.BooleanField(
         default=False,
-        verbose_name='В спистке покупок'
+        verbose_name='В списке покупок'
     )
 
     class Meta:

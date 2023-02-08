@@ -54,3 +54,7 @@ class UserAdmin(admin.ModelAdmin):
     )
     search_fields = ('email', 'username', )
     empty_value_display = '-пусто-'
+
+
+admin.site.register(models.RecipeTag)
+admin.site.register(models.RecipeIngredient)

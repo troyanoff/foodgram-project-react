@@ -25,3 +25,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     queryset = models.Recipe.objects.all()
     serializer_class = serializers.RecipeSerializer
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    """Обработка операций с пользователями."""
+
+    queryset = serializers.User.objects.all()
+    serializer_class = serializers.UserSerializer
