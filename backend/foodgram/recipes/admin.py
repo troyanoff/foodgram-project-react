@@ -23,7 +23,6 @@ class IngredientAdmin(admin.ModelAdmin):
 
     list_display = (
         'name',
-        'measurement_unit',
     )
     search_fields = ('name', )
     empty_value_display = '-пусто-'
@@ -58,3 +57,5 @@ class UserAdmin(admin.ModelAdmin):
 
 admin.site.register(models.RecipeTag)
 admin.site.register(models.RecipeIngredient)
+admin.site.register(models.MeasurementUnit)
+admin.site.register(models.Following)

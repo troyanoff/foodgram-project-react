@@ -1,6 +1,5 @@
 from django.contrib.auth import get_user_model
 from django.db import models
-from foodgram.settings import MEASUREMENT_UNITS
 
 User = get_user_model()
 
@@ -9,15 +8,31 @@ class Ingredient(models.Model):
     """Модель ингредиента."""
 
     name = models.CharField(max_length=100, verbose_name='Название')
-    measurement_unit = models.CharField(
-        max_length=10,
-        choices=MEASUREMENT_UNITS,
+    measurement_unit = models.ForeignKey(
+        'MeasurementUnit',
+        related_name='ing_unit',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
         verbose_name='Единица измерения'
     )
 
     class Meta:
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
+
+    def __str__(self):
+        return self.name
+
+
+class MeasurementUnit(models.Model):
+    """Модель единицы измерения."""
+
+    name = models.CharField(max_length=100, verbose_name='Название')
+
+    class Meta:
+        verbose_name = 'Ед. изм.'
+        verbose_name_plural = 'Ед. изм.'
 
     def __str__(self):
         return self.name
@@ -87,7 +102,7 @@ class Recipe(models.Model):
     ingredients = models.ManyToManyField(
         Ingredient,
         through=RecipeIngredient,
-        verbose_name='Ингредиенты',
+        verbose_name='Ингредиенты'
     )
     tags = models.ManyToManyField(
         Tag,

@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from datetime import timedelta
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -17,6 +19,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework_simplejwt',
     'api.apps.ApiConfig',
     'recipes.apps.RecipesConfig',
 ]
@@ -89,20 +92,15 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
-    # 'DEFAULT_AUTHENTICATION_CLASSES': (
-    #     'rest_framework_simplejwt.authentication.JWTAuthentication',
-    # ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
 }
 
-MEASUREMENT_UNITS = (
-    ('кг', 'кг'),
-    ('г', 'г'),
-    ('шт.', 'шт.'),
-    ('ст. л.', 'ст. л.'),
-    ('ч. л.', 'ч. л.'),
-    ('л', 'л'),
-    ('мл', 'мл'),
-    ('по вкусу', 'по вкусу'),
-)
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=36500),
+    'AUTH_HEADER_TYPES': ('token',),
+    'AUTH_HEADER_NAME': 'HTTP_TOKEN',
+}
