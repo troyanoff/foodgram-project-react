@@ -10,6 +10,7 @@ class RecipeAdmin(admin.ModelAdmin):
     """Параметры отображения модели рецепта."""
 
     list_display = (
+        'id',
         'name',
         'author',
     )
@@ -22,6 +23,7 @@ class IngredientAdmin(admin.ModelAdmin):
     """Параметры отображения модели ингредиента."""
 
     list_display = (
+        'id',
         'name',
     )
     search_fields = ('name', )
@@ -33,6 +35,7 @@ class TagAdmin(admin.ModelAdmin):
     """Параметры отображения модели тега."""
 
     list_display = (
+        'id',
         'name',
         'slug',
     )
@@ -56,6 +59,6 @@ class UserAdmin(admin.ModelAdmin):
 
 
 admin.site.register(models.RecipeTag)
-admin.site.register(models.RecipeIngredient)
+admin.site.register(models.Amount)
 admin.site.register(models.MeasurementUnit)
 admin.site.register(models.Following)

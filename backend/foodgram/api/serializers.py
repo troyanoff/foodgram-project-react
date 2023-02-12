@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 from recipes import models
@@ -25,20 +24,31 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         user = self.context['request'].user
-        return user in obj.following.all()
+        following = models.User.objects.filter(
+            following__user=obj
+        )
+        return user in following
 
 
 class IngredientSerializer(serializers.ModelSerializer):
     """Сериализатор ингредиентов."""
 
     measurement_unit = serializers.SerializerMethodField()
+    id = serializers.SerializerMethodField()
+    name = serializers.SerializerMethodField()
 
     class Meta:
-        fields = ('id', 'name', 'measurement_unit')
-        model = models.Ingredient
+        fields = ('id', 'name', 'measurement_unit', 'amount')
+        model = models.Amount
 
     def get_measurement_unit(self, obj):
-        return obj.measurement_unit.name
+        return obj.ingredient.measurement_unit.name
+
+    def get_id(self, obj):
+        return obj.ingredient.id
+
+    def get_name(self, obj):
+        return obj.ingredient.name
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -53,26 +63,17 @@ class RecipeSerializer(serializers.ModelSerializer):
     """Сериализатор рецептов."""
 
     author = UserSerializer(read_only=True)
-    ingredients = IngredientSerializer(many=True)
+    ingredients = IngredientSerializer(many=True, read_only=True)
 
     class Meta:
         fields = '__all__'
         model = models.Recipe
         depth = 1
 
-    # def create(self, validated_data):
-        # ingredients = validated_data.pop('ingredients')
-        # validated_data['author'] = self.context['request'].user
-        # return validated_data
-        # recipe = models.Recipe.objects.create(**validated_data)
-        # for ingredient in ingredients:
-        #     current_ingredient = get_object_or_404(
-        #         models.Ingredient,
-        #         id=ingredient['id']
-        #     )
-        #     models.IngrMUAmount.objects.create(
-        #         recipe=recipe,
-        #         ingredient=current_ingredient,
-        #         amount=ingredient['amount']
-        #     )
-        # return recipe
+
+class RecipeWriteSerializer(serializers.ModelSerializer):
+    """Сериализатор для записи рецептов."""
+
+    class Meta:
+        fields = '__all__'
+        model = models.Recipe

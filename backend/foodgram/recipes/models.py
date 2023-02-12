@@ -38,10 +38,9 @@ class MeasurementUnit(models.Model):
         return self.name
 
 
-class RecipeIngredient(models.Model):
+class Amount(models.Model):
     """Модель связи рецептов и ингредиента."""
 
-    recipe = models.ForeignKey('Recipe', on_delete=models.CASCADE)
     ingredient = models.ForeignKey(
         Ingredient,
         related_name='ing_rec',
@@ -100,9 +99,10 @@ class Recipe(models.Model):
     )
     text = models.TextField(blank=True, verbose_name='Описание')
     ingredients = models.ManyToManyField(
-        Ingredient,
-        through=RecipeIngredient,
-        verbose_name='Ингредиенты'
+        Amount,
+        related_name='ingredients',
+        verbose_name='Ингредиенты',
+        blank=True
     )
     tags = models.ManyToManyField(
         Tag,
