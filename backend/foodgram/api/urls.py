@@ -12,9 +12,9 @@ router.register('tags', views.TagViewSet, basename='tags')
 router.register('recipes', views.RecipeViewSet, basename='recipes')
 router.register('users', views.UserViewSet, basename='users')
 router.register(
-    'users/subscriptions',
-    views.SubscriptionsViewSet,
-    basename='users_subscribe'
+    r'recipes/(?P<id>\d+)/shopping_cart',
+    views.ShoppingViewSet,
+    basename='shopping'
 )
 
 urlpatterns = [

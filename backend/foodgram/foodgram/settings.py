@@ -105,3 +105,5 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('token',),
     'AUTH_HEADER_NAME': 'HTTP_TOKEN',
 }
+
+# APPEND_SLASH = False

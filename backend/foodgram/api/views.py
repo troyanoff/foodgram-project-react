@@ -36,45 +36,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.RecipeSerializer
     permission_classes = (IsAuthenticated, )
 
-    def create(self, request):
-        """Обработка пост запроса."""
-        ingredients = request.data.pop('ingredients')
-        tags = request.data.pop('tags')
-        request.data['author'] = self.request.user.id
-        serializer = serializers.RecipeWriteSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        recipe = models.Recipe.objects.last()
-        for ingredient in ingredients:
-            current_ingredient = get_object_or_404(
-                models.Ingredient,
-                id=ingredient['id']
-            )
-            current_amount = models.Amount.objects.get_or_create(
-                ingredient=current_ingredient,
-                amount=ingredient['amount']
-            )
-            recipe.ingredients.add(current_amount[0].id)
-        for tag in tags:
-            current_tag = get_object_or_404(models.Tag, id=tag)
-            models.RecipeTag.objects.create(
-                tag=current_tag,
-                recipe=recipe
-            )
-        return Response(serializer.data)
-
-    def update(self, request, *args, **kwargs):
-        recipe = get_object_or_404(models.Recipe, id=self.kwargs.get('pk'))
-        if recipe.author == self.request.user.id:
-            return Response(
-                **kwargs,
-                status=status.HTTP_400_BAD_REQUEST)
-        ingredients = request.data.pop('ingredients')
-        tags = request.data.pop('tags')
-        serializer = serializers.RecipeSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.update(instance=recipe, validated_data=request.data)
-        if ingredients:
+    def _add_related(self, ingredients, tags, recipe):
+        if ingredients != [{}]:
             recipe.ingredients.clear()
             for ingredient in ingredients:
                 current_ingredient = get_object_or_404(
@@ -94,6 +57,32 @@ class RecipeViewSet(viewsets.ModelViewSet):
                     tag=current_tag,
                     recipe=recipe
                 )
+
+    def create(self, request):
+        """Обработка пост запроса."""
+        ingredients = request.data.pop('ingredients')
+        tags = request.data.pop('tags')
+        request.data['author'] = self.request.user.id
+        serializer = serializers.RecipeWriteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        recipe = models.Recipe.objects.get(id=serializer.data['id'])
+        self._add_related(ingredients, tags, recipe)
+        serializer = self.get_serializer(recipe)
+        return Response(serializer.data)
+
+    def update(self, request, *args, **kwargs):
+        recipe = get_object_or_404(models.Recipe, id=self.kwargs.get('pk'))
+        if recipe.author == self.request.user.id:
+            return Response(
+                **kwargs,
+                status=status.HTTP_400_BAD_REQUEST)
+        ingredients = request.data.pop('ingredients')
+        tags = request.data.pop('tags')
+        serializer = serializers.RecipeSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.update(instance=recipe, validated_data=request.data)
+        self._add_related(ingredients, tags, recipe)
         serializer = self.get_serializer(recipe)
         return Response(serializer.data)
 
@@ -131,15 +120,34 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class SubscriptionsViewSet(viewsets.ModelViewSet):
-    """Обработка операций с подписками."""
+class ShoppingViewSet(viewsets.ModelViewSet):
+    """Обработка операций со списком покупок."""
 
-    serializer_class = serializers.UserSerializer
+    serializer_class = serializers.RecipeSerializer
 
-    def get_queryset(self):
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return None
+        return super().get_serializer_class()
+
+    def get(self):
         user = self.request.user
-        following = user.following.all()
-        return following
+        return models.Recipe.objects.filter(shopping__user=user)
+
+    def post(self, request):
+        user = self.request.user
+        recipe = get_object_or_404(models.Recipe, id=self.kwargs.get('id'))
+        models.ShopRecipe.objects.create(user=user, recipe=recipe)
+        serializer = serializers.RecipeSerializer(instance=recipe)
+        return Response(serializer.data)
+
+    def destroy(self, request):
+        user = self.request.user
+        recipe = get_object_or_404(models.Recipe, id=self.kwargs.get('id'))
+        shopping_recipe = models.ShopRecipe.objects.get(
+            user=user, recipe=recipe)
+        shopping_recipe.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(['POST'])

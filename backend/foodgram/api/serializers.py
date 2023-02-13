@@ -64,11 +64,29 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     author = UserSerializer(read_only=True)
     ingredients = IngredientSerializer(many=True, read_only=True)
+    is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
         fields = '__all__'
         model = models.Recipe
         depth = 1
+
+    def get_is_favorited(self, obj):
+        return (
+            models.FavoriteRecipe.objects.filter(
+                user=self.context['request'].user,
+                recipe=obj
+            ).exists()
+        )
+
+    def get_is_in_shopping_cart(self, obj):
+        return (
+            models.ShopRecipe.objects.filter(
+                user=self.context['request'].user,
+                recipe=obj
+            ).exists()
+        )
 
 
 class RecipeWriteSerializer(serializers.ModelSerializer):

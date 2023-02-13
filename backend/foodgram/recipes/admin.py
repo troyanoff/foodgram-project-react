@@ -49,6 +49,7 @@ class UserAdmin(admin.ModelAdmin):
     """Параметры отображения модели пользователя."""
 
     list_display = (
+        'id',
         'first_name',
         'last_name',
         'username',
@@ -62,3 +63,5 @@ admin.site.register(models.RecipeTag)
 admin.site.register(models.Amount)
 admin.site.register(models.MeasurementUnit)
 admin.site.register(models.Following)
+admin.site.register(models.FavoriteRecipe)
+admin.site.register(models.ShopRecipe)

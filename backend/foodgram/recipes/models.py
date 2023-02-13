@@ -48,7 +48,22 @@ class Amount(models.Model):
         blank=True,
         null=True
     )
-    amount = models.IntegerField(verbose_name='Количество')
+    amount = models.IntegerField(
+        verbose_name='Количество',
+        blank=True,
+        null=True  # Для "По вкусу".
+    )
+
+    class Meta:
+        verbose_name = 'Количество ингредиента'
+        verbose_name_plural = 'Количество ингредиента'
+
+    def __str__(self):
+        return (
+            f'{self.ingredient}, '
+            f'{self.amount}, '
+            f'{self.ingredient.measurement_unit}'
+        )
 
 
 class Tag(models.Model):
@@ -81,6 +96,13 @@ class RecipeTag(models.Model):
         null=True
     )
 
+    class Meta:
+        verbose_name = 'Рецепт и тег'
+        verbose_name_plural = 'Рецепты и теги'
+
+    def __str__(self):
+        return f'{self.recipe}, {self.tag}'
+
 
 class Recipe(models.Model):
     """Модель рецепта."""
@@ -110,14 +132,6 @@ class Recipe(models.Model):
         verbose_name='Теги'
     )
     cooking_time = models.IntegerField(verbose_name='Время приготовления')
-    is_favorited = models.BooleanField(
-        default=False,
-        verbose_name='В списке избранного'
-    )
-    is_in_shopping_cart = models.BooleanField(
-        default=False,
-        verbose_name='В списке покупок'
-    )
 
     class Meta:
         verbose_name = 'Рецепт'
@@ -140,6 +154,13 @@ class FavoriteRecipe(models.Model):
         on_delete=models.CASCADE
     )
 
+    class Meta:
+        verbose_name = 'Избранный рецепт'
+        verbose_name_plural = 'Избранные рецепты'
+
+    def __str__(self):
+        return f'{self.recipe} в избранном у {self.user}'
+
 
 class ShopRecipe(models.Model):
     """Модель связи рецептов и юзеров для формирования списка покупок."""
@@ -147,12 +168,20 @@ class ShopRecipe(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='shopping'
+        related_name='buyer'
     )
     recipe = models.ForeignKey(
         Recipe,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name='shopping'
     )
+
+    class Meta:
+        verbose_name = 'Список покупок'
+        verbose_name_plural = 'Список покупок'
+
+    def __str__(self):
+        return f'{self.recipe} в корзине у {self.user}'
 
 
 class Following(models.Model):
@@ -174,3 +203,6 @@ class Following(models.Model):
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
+
+    def __str__(self):
+        return f'{self.user} подписан на {self.author}'
