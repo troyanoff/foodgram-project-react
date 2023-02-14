@@ -20,6 +20,12 @@ class Ingredient(models.Model):
     class Meta:
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['name', 'measurement_unit'],
+                name='unique_ungredient'
+            )
+        ]
 
     def __str__(self):
         return self.name
@@ -99,6 +105,12 @@ class RecipeTag(models.Model):
     class Meta:
         verbose_name = 'Рецепт и тег'
         verbose_name_plural = 'Рецепты и теги'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'tag'],
+                name='unique_recipe_tag'
+            )
+        ]
 
     def __str__(self):
         return f'{self.recipe}, {self.tag}'
@@ -157,6 +169,12 @@ class FavoriteRecipe(models.Model):
     class Meta:
         verbose_name = 'Избранный рецепт'
         verbose_name_plural = 'Избранные рецепты'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_favorited'
+            )
+        ]
 
     def __str__(self):
         return f'{self.recipe} в избранном у {self.user}'
@@ -179,6 +197,12 @@ class ShopRecipe(models.Model):
     class Meta:
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Список покупок'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_shopping'
+            )
+        ]
 
     def __str__(self):
         return f'{self.recipe} в корзине у {self.user}'
@@ -203,6 +227,12 @@ class Following(models.Model):
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'author'],
+                name='unique_follower'
+            )
+        ]
 
     def __str__(self):
         return f'{self.user} подписан на {self.author}'

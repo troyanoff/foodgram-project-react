@@ -95,3 +95,31 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = models.Recipe
+
+
+class ShoppingCartSerializer(serializers.ModelSerializer):
+    """"Сериализатор корзины."""
+
+    class Meta:
+        fields = '__all__'
+        model = models.ShopRecipe
+        validators = [
+            serializers.UniqueTogetherValidator(
+                queryset=models.ShopRecipe.objects.all(),
+                fields=['user', 'recipe']
+            )
+        ]
+
+
+class FavoritedSerializer(serializers.ModelSerializer):
+    """"Сериализатор корзины."""
+
+    class Meta:
+        fields = '__all__'
+        model = models.FavoriteRecipe
+        validators = [
+            serializers.UniqueTogetherValidator(
+                queryset=models.FavoriteRecipe.objects.all(),
+                fields=['user', 'recipe']
+            )
+        ]

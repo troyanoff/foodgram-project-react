@@ -1,3 +1,4 @@
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
@@ -85,6 +86,27 @@ class RecipeViewSet(viewsets.ModelViewSet):
         self._add_related(ingredients, tags, recipe)
         serializer = self.get_serializer(recipe)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], name='download')
+    def download_shopping_cart(self, request):
+        user = request.user
+        shopping_cart = models.Recipe.objects.filter(shopping__user=user)
+        response = HttpResponse(content_type='text/plain')
+        CD = 'attachment; filename="shopping_cart.txt"'
+        response['Content-Disposition'] = CD
+        result = {}
+        for recipe in shopping_cart:
+            for ingr in recipe.ingredients.all():
+                if result.get(ingr.ingredient.name):
+                    result[ingr.ingredient.name][1] += ingr.amount
+                else:
+                    meas = ingr.ingredient.measurement_unit.name
+                    result[ingr.ingredient.name] = []
+                    result[ingr.ingredient.name].append(meas)
+                    result[ingr.ingredient.name].append(ingr.amount)
+        for ingr, param in result.items():
+            response.write(f'-{ingr}({param[0]})-{param[1]}\n')
+        return response
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -176,3 +198,49 @@ def logout_token(request):
     for token in OutstandingToken.objects.filter(user=request.user):
         BlacklistedToken.objects.get_or_create(token=token)
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['GET', 'POST', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def shopping_cart(request, recipe_id):
+    """Обработка операций с корзиной."""
+    user = request.user
+    recipe = get_object_or_404(models.Recipe, id=recipe_id)
+    if request.method == 'GET':
+        pass
+    if request.method == 'POST':
+        data = {}
+        data['user'] = user.id
+        data['recipe'] = recipe.id
+        serializer = serializers.ShoppingCartSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        serializer = serializers.RecipeWriteSerializer(instance=recipe)
+        return Response(serializer.data)
+    if request.method == 'DELETE':
+        shopping_recipe = models.ShopRecipe.objects.get(
+            user=user, recipe=recipe)
+        shopping_recipe.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['POST', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def farorited(request, recipe_id):
+    """Обработка операций с избранным."""
+    user = request.user
+    recipe = get_object_or_404(models.Recipe, id=recipe_id)
+    if request.method == 'POST':
+        data = {}
+        data['user'] = user.id
+        data['recipe'] = recipe.id
+        serializer = serializers.FavoritedSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        serializer = serializers.RecipeWriteSerializer(instance=recipe)
+        return Response(serializer.data)
+    if request.method == 'DELETE':
+        favorited_recipe = models.ShopRecipe.objects.get(
+            user=user, recipe=recipe)
+        favorited_recipe.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
