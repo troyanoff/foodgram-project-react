@@ -123,3 +123,61 @@ class FavoritedSerializer(serializers.ModelSerializer):
                 fields=['user', 'recipe']
             )
         ]
+
+
+class FollowingSerializer(serializers.ModelSerializer):
+    """"Сериализатор корзины."""
+
+    class Meta:
+        fields = '__all__'
+        model = models.Following
+        validators = [
+            serializers.UniqueTogetherValidator(
+                queryset=models.Following.objects.all(),
+                fields=['user', 'author']
+            )
+        ]
+
+    def validate_author(self, value):
+        if value == self.initial_data['user']:
+            raise serializers.ValidationError(
+                'Нельзя подписаться на самого себя!'
+            )
+        return value
+
+
+class UserSubsrcibeSerializer(serializers.ModelSerializer):
+    """Сериализатор для пользователя после подписки."""
+
+    is_subscribed = serializers.SerializerMethodField()
+    recipes = RecipeSerializer(read_only=True, many=True)
+    recipes_count = serializers.SerializerMethodField()
+
+    class Meta:
+        fields = (
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed',
+            'recipes',
+            'recipes_count'
+        )
+        model = User
+
+    def get_is_subscribed(self, obj):
+        user = self.context['request'].user
+        following = models.User.objects.filter(
+            following__user=obj
+        )
+        return user in following
+
+    def get_recipes(self, obj):
+        return RecipeSerializer(
+            models.Recipe.objects.filter(author=obj).all(),
+            many=True
+        ).data
+
+    def get_recipes_count(self, obj):
+        return models.Recipe.objects.filter(author=obj).count()

@@ -27,8 +27,8 @@ urlpatterns = [
         name='favorited'
     ),
     path(
-        'recipes/<int:recipe_id>/favorite/',
-        views.farorited,
-        name='favorited'
+        'users/<int:author_id>/subscribe/',
+        views.subscribe,
+        name='subscribe'
     ),
 ]

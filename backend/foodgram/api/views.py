@@ -115,6 +115,11 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = serializers.User.objects.all()
     serializer_class = serializers.UserSerializer
 
+    def get_serializer_class(self):
+        if self.request.path == '/api/users/subscriptions/':
+            return serializers.UserSubsrcibeSerializer
+        return serializers.UserSerializer
+
     def get_object(self):
         if self.request.path == '/api/users/me/':
             return models.User.objects.get(id=self.request.user.id)
@@ -139,6 +144,7 @@ class UserViewSet(viewsets.ModelViewSet):
             following__user=user
         )
         serializer = self.get_serializer(following, many=True)
+        # serializers.UserSubsrcibeSerializer(following, many=True)
         return Response(serializer.data)
 
 
@@ -240,7 +246,35 @@ def farorited(request, recipe_id):
         serializer = serializers.RecipeWriteSerializer(instance=recipe)
         return Response(serializer.data)
     if request.method == 'DELETE':
-        favorited_recipe = models.ShopRecipe.objects.get(
-            user=user, recipe=recipe)
+        favorited_recipe = get_object_or_404(
+            models.ShopRecipe,
+            user=user,
+            recipe=recipe
+        )
         favorited_recipe.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['POST', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def subscribe(request, author_id):
+    """Обработка операций с подписками."""
+    user = request.user
+    author = get_object_or_404(models.User, id=author_id)
+    if request.method == 'POST':
+        data = {}
+        data['user'] = user.id
+        data['author'] = author.id
+        serializer = serializers.FollowingSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        serializer = serializers.UserSubsrcibeSerializer(instance=author)
+        return Response(serializer.data)
+    if request.method == 'DELETE':
+        subscribe = get_object_or_404(
+            models.Following,
+            user=user,
+            author=author
+        )
+        subscribe.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
