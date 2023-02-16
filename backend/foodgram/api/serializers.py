@@ -181,3 +181,10 @@ class UserSubsrcibeSerializer(serializers.ModelSerializer):
 
     def get_recipes_count(self, obj):
         return models.Recipe.objects.filter(author=obj).count()
+
+
+class TokenSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        fields = ('email', 'password')
+        model = User
