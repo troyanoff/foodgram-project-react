@@ -1,5 +1,6 @@
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action, api_view, permission_classes
@@ -31,7 +32,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     queryset = models.Recipe.objects.all()
     serializer_class = serializers.RecipeSerializer
-    permission_classes = (IsAuthenticated, )
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('tags', )
+
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            permission_classes = (AllowAny, )
+        else:
+            permission_classes = (IsAuthenticated, )
+        return [permission() for permission in permission_classes]
 
     def _add_related(self, ingredients, tags, recipe):
         if ingredients != [{}]:
@@ -162,6 +171,13 @@ class UserViewSet(viewsets.ModelViewSet):
         if self.request.path in sub_path:
             return serializers.UserSubsrcibeSerializer
         return serializers.UserSerializer
+
+    def get_permissions(self):
+        if self.action in ('create', 'retrieve'):
+            permission_classes = (AllowAny, )
+        else:
+            permission_classes = (IsAuthenticated, )
+        return [permission() for permission in permission_classes]
 
     def get_object(self):
         if self.request.path == '/api/users/me/':

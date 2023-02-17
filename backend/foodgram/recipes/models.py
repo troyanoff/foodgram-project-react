@@ -144,8 +144,10 @@ class Recipe(models.Model):
         verbose_name='Теги'
     )
     cooking_time = models.IntegerField(verbose_name='Время приготовления')
+    pub_date = models.DateTimeField(auto_now_add=True, verbose_name='Дата')
 
     class Meta:
+        ordering = ['-pub_date']
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
 
