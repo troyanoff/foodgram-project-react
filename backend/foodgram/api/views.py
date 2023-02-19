@@ -1,14 +1,15 @@
+from api import mixins, serializers
 from django.http import HttpResponse
+from django.db.models import Sum
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
+from recipes import models
 from rest_framework import status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-
-from api import serializers, mixins
-from recipes import models
 
 
 class IngredientViewSet(mixins.RetrieveListViewSet):
@@ -31,7 +32,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """Обработка операций с рецептами."""
 
     queryset = models.Recipe.objects.all()
-    serializer_class = serializers.RecipeSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('tags', )
 
@@ -42,119 +42,70 @@ class RecipeViewSet(viewsets.ModelViewSet):
             permission_classes = (IsAuthenticated, )
         return [permission() for permission in permission_classes]
 
-    def _add_related(self, ingredients, tags, recipe):
-        if ingredients != [{}]:
-            recipe.ingredients.clear()
-            for ingredient in ingredients:
-                current_ingredient = get_object_or_404(
-                    models.Ingredient,
-                    id=ingredient['id']
-                )
-                current_amount = models.Amount.objects.get_or_create(
-                    ingredient=current_ingredient,
-                    amount=ingredient['amount']
-                )
-                recipe.ingredients.add(current_amount[0].id)
-        if tags:
-            recipe.tags.clear()
-            for tag in tags:
-                current_tag = get_object_or_404(models.Tag, id=tag)
-                models.RecipeTag.objects.create(
-                    tag=current_tag,
-                    recipe=recipe
-                )
+    def get_serializer_class(self):
+        if self.action in ('create', 'update', 'partial_update'):
+            return serializers.RecipeWriteSerializer
+        return serializers.RecipeSerializer
 
-    def create(self, request):
-        """Обработка пост запроса."""
-        ingredients = request.data.pop('ingredients')
-        tags = request.data.pop('tags')
-        request.data['author'] = self.request.user.id
-        serializer = serializers.RecipeWriteSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        recipe = models.Recipe.objects.get(id=serializer.data['id'])
-        self._add_related(ingredients, tags, recipe)
-        serializer = self.get_serializer(recipe)
-        return Response(serializer.data)
+    def perform_create(self, serializer):
+        serializer.save(
+            author=self.request.user
+        )
 
-    def update(self, request, *args, **kwargs):
-        recipe = get_object_or_404(models.Recipe, id=self.kwargs.get('pk'))
-        if recipe.author == self.request.user.id:
-            return Response(
-                **kwargs,
-                status=status.HTTP_400_BAD_REQUEST)
-        ingredients = request.data.pop('ingredients')
-        tags = request.data.pop('tags')
-        serializer = serializers.RecipeSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.update(instance=recipe, validated_data=request.data)
-        self._add_related(ingredients, tags, recipe)
-        serializer = self.get_serializer(recipe)
-        return Response(serializer.data)
-
-    @action(detail=False, methods=['get'], name='download')
-    def download_shopping_cart(self, request):
-        user = request.user
-        shopping_cart = models.Recipe.objects.filter(shopping__user=user)
-        response = HttpResponse(content_type='text/plain')
-        CD = 'attachment; filename="shopping_cart.txt"'
-        response['Content-Disposition'] = CD
-        result = {}
-        for recipe in shopping_cart:
-            for ingr in recipe.ingredients.all():
-                if result.get(ingr.ingredient.name):
-                    result[ingr.ingredient.name][1] += ingr.amount
-                else:
-                    meas = ingr.ingredient.measurement_unit.name
-                    result[ingr.ingredient.name] = []
-                    result[ingr.ingredient.name].append(meas)
-                    result[ingr.ingredient.name].append(ingr.amount)
-        for ingr, param in result.items():
-            response.write(f'-{ingr}({param[0]})-{param[1]}\n')
-        return response
-
-    @action(detail=True, methods=['post', 'delete'], name='favorite')
-    def favorite(self, request, pk=None):
-        """Обработка операций с избранным."""
+    def _recipes_list(self, request, serializer, model):
         user = self.request.user
         recipe = get_object_or_404(models.Recipe, id=self.kwargs.get('pk'))
         if request.method == 'POST':
             data = {}
             data['user'] = user.id
             data['recipe'] = recipe.id
-            serializer = serializers.FavoritedSerializer(data=data)
+            serializer = serializer(data=data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            serializer = serializers.RecipeWriteSerializer(instance=recipe)
+            serializer = self.get_serializer(recipe)
             return Response(serializer.data)
         if request.method == 'DELETE':
-            favorited_recipe = get_object_or_404(
-                models.FavoriteRecipe,
+            current_recipe = get_object_or_404(
+                model,
                 user=user,
                 recipe=recipe
             )
-            favorited_recipe.delete()
+            current_recipe.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, methods=['get'], name='download')
+    def download_shopping_cart(self, request):
+        user = request.user
+        shopping_cart = models.Recipe.objects.filter(
+            shopping__user=user
+        ).values_list(
+            'ingredients__ingredient__name',
+            'ingredients__ingredient__measurement_unit__name'
+        ).annotate(amount=Sum('ingredients__amount'))
+        response = HttpResponse(content_type='text/plain')
+        response['Content-Disposition'] = 'attachment; filename="sc.txt"'
+        for name, mu, amount in shopping_cart:
+            r = reverse('api:recipes-download-shopping-cart')
+            response.write(f'-{name}({mu})-{amount}{r}\n')
+        return response
+
+    @action(detail=True, methods=['post', 'delete'], name='favorite')
+    def favorite(self, request, pk=None):
+        """Обработка операций с избранным."""
+        return self._recipes_list(
+            request,
+            serializers.FavoritedSerializer,
+            models.FavoriteRecipe
+        )
 
     @action(detail=True, methods=['post', 'delete'], name='favorite')
     def shopping_cart(self, request, pk=None):
         """Обработка операций с корзиной."""
-        user = request.user
-        recipe = get_object_or_404(models.Recipe, id=self.kwargs.get('pk'))
-        if request.method == 'POST':
-            data = {}
-            data['user'] = user.id
-            data['recipe'] = recipe.id
-            serializer = serializers.ShoppingCartSerializer(data=data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            serializer = serializers.RecipeWriteSerializer(instance=recipe)
-            return Response(serializer.data)
-        if request.method == 'DELETE':
-            shopping_recipe = models.ShopRecipe.objects.get(
-                user=user, recipe=recipe)
-            shopping_recipe.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        return self._recipes_list(
+            request,
+            serializers.ShoppingCartSerializer,
+            models.ShopRecipe
+        )
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -165,8 +116,8 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         pk = self.kwargs.get('pk')
         sub_path = (
-            '/api/users/subscriptions/',
-            f'/api/users/{pk}/subscribe/'
+            reverse('api:users-subscriptions'),
+            reverse('api:users-subscribe', kwargs={'pk': pk})
         )
         if self.request.path in sub_path:
             return serializers.UserSubsrcibeSerializer
@@ -181,20 +132,20 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_object(self):
         if self.request.path == '/api/users/me/':
-            return models.User.objects.get(id=self.request.user.id)
+            return self.request.user
         return super().get_object()
 
-    def update(self, request, *args, **kwargs):
-        if self.request.path == '/api/users/set_password/':
-            new_password = request.data.get('new_password')
-            current_password = request.data.get('current_password')
-            user = self.request.user
-            if user.password == current_password:
-                user.password = new_password
-                user.save()
-                serializer = self.get_serializer(user)
-                return Response(serializer.data)
-        return super().update(request, *args, **kwargs)
+    @action(detail=False, methods=['post'], name='set_password')
+    def set_password(self, request):
+        new_password = request.data.get('new_password')
+        current_password = request.data.get('current_password')
+        user = self.request.user
+        if user.password == current_password:
+            user.password = new_password
+            user.save()
+            serializer = self.get_serializer(user)
+            return Response(serializer.data)
+        return Response(request.data)
 
     @action(detail=False, methods=['get'], name='subscriptions')
     def subscriptions(self, request):

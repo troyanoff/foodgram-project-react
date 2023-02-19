@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
-from rest_framework import serializers
-
+from django.shortcuts import get_object_or_404
 from recipes import models
+from rest_framework import serializers
 
 User = get_user_model()
 
@@ -24,31 +24,26 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         user = self.context['request'].user
-        following = models.User.objects.filter(
-            following__user=obj
-        )
-        return user in following
+        following = models.Following.objects.filter(
+            user=obj,
+            author=user
+        ).exists()
+        return following
 
 
 class IngredientSerializer(serializers.ModelSerializer):
     """Сериализатор ингредиентов."""
 
-    measurement_unit = serializers.SerializerMethodField()
-    id = serializers.SerializerMethodField()
-    name = serializers.SerializerMethodField()
+    measurement_unit = serializers.CharField(
+        source='ingredient.measurement_unit',
+        read_only=True
+    )
+    id = serializers.IntegerField(source='ingredient.id')
+    name = serializers.CharField(source='ingredient.name', read_only=True)
 
     class Meta:
         fields = ('id', 'name', 'measurement_unit', 'amount')
         model = models.Amount
-
-    def get_measurement_unit(self, obj):
-        return obj.ingredient.measurement_unit.name
-
-    def get_id(self, obj):
-        return obj.ingredient.id
-
-    def get_name(self, obj):
-        return obj.ingredient.name
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -92,9 +87,64 @@ class RecipeSerializer(serializers.ModelSerializer):
 class RecipeWriteSerializer(serializers.ModelSerializer):
     """Сериализатор для записи рецептов."""
 
+    author = UserSerializer(
+        read_only=True
+    )
+    ingredients = IngredientSerializer(many=True, required=False)
+    tags = serializers.PrimaryKeyRelatedField(
+        many=True,
+        required=False,
+        queryset=models.Tag.objects.all()
+    )
+
     class Meta:
         fields = '__all__'
         model = models.Recipe
+
+    def validate_author(self, value):
+        if value != self.context['request'].user:
+            raise serializers.ValidationError(
+                'Нельзя редактировать чужие рецепты!'
+            )
+        return value
+
+    def _add_related(self, ingredients, tags, recipe):
+        if ingredients != [{}]:
+            recipe.ingredients.clear()
+            for ingredient in ingredients:
+                current_ingredient = get_object_or_404(
+                    models.Ingredient,
+                    id=ingredient['ingredient']['id']
+                )
+                current_amount = models.Amount.objects.get_or_create(
+                    ingredient=current_ingredient,
+                    amount=ingredient['amount']
+                )
+                recipe.ingredients.add(current_amount[0].id)
+        if tags:
+            recipe.tags.clear()
+            for tag in tags:
+                current_tag = get_object_or_404(models.Tag, id=tag.id)
+                models.RecipeTag.objects.create(
+                    tag=current_tag,
+                    recipe=recipe
+                )
+
+    def create(self, validated_data):
+        ingredients = validated_data.pop('ingredients')
+        tags = validated_data.pop('tags')
+        recipe = models.Recipe.objects.create(**validated_data)
+        self._add_related(ingredients, tags, recipe)
+        return recipe
+
+    def update(self, instance, validated_data):
+        ingredients = validated_data.pop('ingredients')
+        tags = validated_data.pop('tags')
+        self._add_related(ingredients, tags, instance)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
@@ -168,14 +218,15 @@ class UserSubsrcibeSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         user = self.context['request'].user
-        following = models.User.objects.filter(
-            following__user=obj
-        )
-        return user in following
+        following = models.Following.objects.filter(
+            user=obj,
+            author=user
+        ).exists()
+        return following
 
     def get_recipes(self, obj):
         return RecipeSerializer(
-            models.Recipe.objects.filter(author=obj).all(),
+            models.Recipe.objects.filter(author=obj),
             many=True
         ).data
 
