@@ -1,15 +1,16 @@
-from api import mixins, serializers
 from django.http import HttpResponse
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
-from recipes import models
 from rest_framework import status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+
+from api import mixins, serializers
+from recipes import models
 
 
 class IngredientViewSet(mixins.RetrieveListViewSet):
@@ -85,8 +86,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         response = HttpResponse(content_type='text/plain')
         response['Content-Disposition'] = 'attachment; filename="sc.txt"'
         for name, mu, amount in shopping_cart:
-            r = reverse('api:recipes-download-shopping-cart')
-            response.write(f'-{name}({mu})-{amount}{r}\n')
+            response.write(f'-{name}({mu})-{amount}\n')
         return response
 
     @action(detail=True, methods=['post', 'delete'], name='favorite')
@@ -131,7 +131,9 @@ class UserViewSet(viewsets.ModelViewSet):
         return [permission() for permission in permission_classes]
 
     def get_object(self):
-        if self.request.path == '/api/users/me/':
+        if self.request.path == reverse(
+            'api:users-detail', kwargs={'pk': 'me'}
+        ):
             return self.request.user
         return super().get_object()
 
@@ -178,36 +180,6 @@ class UserViewSet(viewsets.ModelViewSet):
             )
             subscribe.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class ShoppingViewSet(viewsets.ModelViewSet):
-    """Обработка операций со списком покупок."""
-
-    serializer_class = serializers.RecipeSerializer
-
-    def get_serializer_class(self):
-        if self.action == 'create':
-            return None
-        return super().get_serializer_class()
-
-    def get(self):
-        user = self.request.user
-        return models.Recipe.objects.filter(shopping__user=user)
-
-    def post(self, request):
-        user = self.request.user
-        recipe = get_object_or_404(models.Recipe, id=self.kwargs.get('id'))
-        models.ShopRecipe.objects.create(user=user, recipe=recipe)
-        serializer = serializers.RecipeSerializer(instance=recipe)
-        return Response(serializer.data)
-
-    def destroy(self, request):
-        user = self.request.user
-        recipe = get_object_or_404(models.Recipe, id=self.kwargs.get('id'))
-        shopping_recipe = models.ShopRecipe.objects.get(
-            user=user, recipe=recipe)
-        shopping_recipe.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(['POST'])

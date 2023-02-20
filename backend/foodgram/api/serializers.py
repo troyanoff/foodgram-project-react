@@ -1,7 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
-from recipes import models
 from rest_framework import serializers
+
+from recipes import models
 
 User = get_user_model()
 
@@ -109,13 +110,15 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return value
 
     def _add_related(self, ingredients, tags, recipe):
-        if ingredients != [{}]:
+        if ingredients:
             recipe.ingredients.clear()
             for ingredient in ingredients:
+                # К изменению ингредиентов доступа нет.
                 current_ingredient = get_object_or_404(
                     models.Ingredient,
                     id=ingredient['ingredient']['id']
                 )
+                # Создает новое кол-во или берет существующее.
                 current_amount = models.Amount.objects.get_or_create(
                     ingredient=current_ingredient,
                     amount=ingredient['amount']
@@ -141,10 +144,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         self._add_related(ingredients, tags, instance)
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        instance.save()
-        return instance
+        return super().update(instance, validated_data)
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
