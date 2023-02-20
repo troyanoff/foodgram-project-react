@@ -12,6 +12,7 @@ django-templated-mail==1.1.1
 djangorestframework==3.14.0
 djangorestframework-simplejwt==4.8.0
 djoser==2.1.0
+gunicorn==20.0.4
 flake8==6.0.0
 idna==3.4
 itypes==1.2.0
@@ -34,4 +35,4 @@ social-auth-core==4.3.0
 sqlparse==0.4.3
 uritemplate==4.1.1
 urllib3==1.26.14
-django-enviro==0.9.0
+psycopg2-binary==2.8.6
