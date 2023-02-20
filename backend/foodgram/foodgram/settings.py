@@ -1,6 +1,5 @@
 import os
 
-from datetime import timedelta
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -127,6 +126,5 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 CSRF_TRUSTED_ORIGINS = [
     'http://*',
-    'https://\*',
-    'https://localhost',
+    'https://62.84.127.80',
 ]
