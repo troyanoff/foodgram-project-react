@@ -36,3 +36,4 @@ sqlparse==0.4.3
 uritemplate==4.1.1
 urllib3==1.26.14
 psycopg2-binary==2.8.6
+python-dotenv
