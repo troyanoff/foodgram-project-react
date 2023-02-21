@@ -120,9 +120,9 @@ DJOSER = {
     }
 }
 
-STATIC_URL = '/static/'
+STATIC_URL = '/django_static/'
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_ROOT = os.path.join(BASE_DIR, 'django_static')
 
 MEDIA_URL = '/media/'
 
