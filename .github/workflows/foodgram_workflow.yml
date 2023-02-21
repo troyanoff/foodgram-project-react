@@ -16,7 +16,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-         # обновление pip
+         # обновление pipi
          python -m pip install --upgrade pip
          # установка flake8
          pip install flake8
