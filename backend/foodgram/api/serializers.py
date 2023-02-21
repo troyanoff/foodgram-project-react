@@ -113,16 +113,16 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         if ingredients:
             recipe.ingredients.clear()
             for ingredient in ingredients:
-                # К изменению ингредиентов доступа нет.
                 current_ingredient = get_object_or_404(
                     models.Ingredient,
                     id=ingredient['ingredient']['id']
                 )
-                # Создает новое кол-во или берет существующее.
                 current_amount = models.Amount.objects.get_or_create(
                     ingredient=current_ingredient,
                     amount=ingredient['amount']
                 )
+                if current_amount in recipe.ingredients:
+                    continue
                 recipe.ingredients.add(current_amount[0].id)
         if tags:
             recipe.tags.clear()
