@@ -109,6 +109,16 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             )
         return value
 
+    def validate_ingredients(self, value):
+        for index in range(len(value)):
+            ingredient = value.pop(index)
+            if ingredient in value:
+                raise serializers.ValidationError(
+                    'Нельзя добавлять одинаковые ингредиенты!'
+                )
+            value.append(ingredient)
+        return value
+
     def _add_related(self, ingredients, tags, recipe):
         if ingredients:
             recipe.ingredients.clear()
@@ -121,8 +131,6 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
                     ingredient=current_ingredient,
                     amount=ingredient['amount']
                 )
-                if current_amount in recipe.ingredients:
-                    continue
                 recipe.ingredients.add(current_amount[0].id)
         if tags:
             recipe.tags.clear()
