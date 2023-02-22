@@ -116,7 +116,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     'Нельзя добавлять одинаковые ингредиенты!'
                 )
-            value.append(ingredient)
+            value.insert(index, ingredient)
         return value
 
     def _add_related(self, ingredients, tags, recipe):
