@@ -110,13 +110,13 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return value
 
     def validate_ingredients(self, value):
-        for index in range(len(value)):
-            ingredient = value.pop(index)
-            if ingredient in value:
-                raise serializers.ValidationError(
-                    'Нельзя добавлять одинаковые ингредиенты!'
-                )
-            value.insert(index, ingredient)
+        id_list = []
+        for ingredient in value:
+            id_list.append(ingredient['ingredient']['id'])
+        if len(id_list) != len(set(id_list)):
+            raise serializers.ValidationError(
+                'Нельзя добавлять одинаковые ингредиенты!'
+            )
         return value
 
     def _add_related(self, ingredients, tags, recipe):
