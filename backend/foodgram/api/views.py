@@ -21,7 +21,9 @@ class IngredientViewSet(mixins.RetrieveListViewSet):
     pagination_class = (None)
     permission_classes = (AllowAny, )
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('name', )
+    filterset_fields = {
+        'name': ['startswith'],
+    }
 
 
 class TagViewSet(mixins.RetrieveListViewSet):
