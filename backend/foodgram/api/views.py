@@ -17,7 +17,7 @@ class IngredientViewSet(mixins.RetrieveListViewSet):
     """Обработка операций с ингредиентами."""
 
     queryset = models.Ingredient.objects.all()
-    serializer_class = serializers.IngredientSerializer
+    serializer_class = serializers.IngredientListSerializer
     pagination_class = (None)
     permission_classes = (AllowAny, )
     filter_backends = (DjangoFilterBackend,)

@@ -33,7 +33,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class IngredientSerializer(serializers.ModelSerializer):
-    """Сериализатор ингредиентов."""
+    """Сериализатор ингредиентов в рецепте."""
 
     measurement_unit = serializers.CharField(
         source='ingredient.measurement_unit',
@@ -45,6 +45,19 @@ class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('id', 'name', 'measurement_unit', 'amount')
         model = models.Amount
+
+
+class IngredientListSerializer(serializers.ModelSerializer):
+    """Сериализатор ингредиентов."""
+
+    measurement_unit = serializers.CharField(
+        source='measurement_unit.name',
+        read_only=True
+    )
+
+    class Meta:
+        fields = ('id', 'name', 'measurement_unit')
+        model = models.Ingredient
 
 
 class TagSerializer(serializers.ModelSerializer):
