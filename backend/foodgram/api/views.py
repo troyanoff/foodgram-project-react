@@ -18,7 +18,8 @@ class IngredientViewSet(mixins.RetrieveListViewSet):
 
     queryset = models.Ingredient.objects.all()
     serializer_class = serializers.IngredientSerializer
-    pagination_class = (AllowAny, )
+    pagination_class = (None)
+    permission_classes = (AllowAny, )
 
 
 class TagViewSet(mixins.RetrieveListViewSet):
@@ -26,7 +27,8 @@ class TagViewSet(mixins.RetrieveListViewSet):
 
     queryset = models.Tag.objects.all()
     serializer_class = serializers.TagSerializer
-    pagination_class = (AllowAny, )
+    pagination_class = (None)
+    permission_classes = (AllowAny, )
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
