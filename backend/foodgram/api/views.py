@@ -20,6 +20,8 @@ class IngredientViewSet(mixins.RetrieveListViewSet):
     serializer_class = serializers.IngredientSerializer
     pagination_class = (None)
     permission_classes = (AllowAny, )
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('name', )
 
 
 class TagViewSet(mixins.RetrieveListViewSet):
