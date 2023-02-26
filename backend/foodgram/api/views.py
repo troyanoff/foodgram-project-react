@@ -9,7 +9,7 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from api import mixins, serializers
+from api import filters, mixins, serializers
 from recipes import models
 
 
@@ -20,10 +20,7 @@ class IngredientViewSet(mixins.RetrieveListViewSet):
     serializer_class = serializers.IngredientListSerializer
     pagination_class = (None)
     permission_classes = (AllowAny, )
-    filter_backends = (DjangoFilterBackend,)
-    filterset_fields = {
-        'name': ['startswith'],
-    }
+    filter_class = filters.IngredientFilter
 
 
 class TagViewSet(mixins.RetrieveListViewSet):
