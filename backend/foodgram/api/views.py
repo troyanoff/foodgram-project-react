@@ -161,10 +161,7 @@ class UserViewSet(viewsets.ModelViewSet):
         following = models.User.objects.filter(
             following__user=user
         )
-        paginator = self.paginate_queryset(
-            queryset=following,
-            request=request
-        )
+        paginator = self.paginate_queryset(following)
         serializer = self.get_serializer(paginator, many=True)
         return self.get_paginated_response(serializer.data)
 
