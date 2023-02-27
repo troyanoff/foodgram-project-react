@@ -7,7 +7,7 @@ class RecipeFilter(filters.FilterSet):
 
     is_favorited = filters.NumberFilter(method='is_favorited')
     is_in_shopping_cart = filters.NumberFilter(method='is_in_shopping_cart')
-    tags = filters.CharFilter(field_name='tags__name', lookup_expr='icontains')
+    tags = filters.CharFilter(field_name='tags__slug', lookup_expr='icontains')
     tags = filters.CharFilter(field_name='author__id', lookup_expr='icontains')
 
     class Meta:
