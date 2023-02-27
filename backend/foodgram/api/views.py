@@ -38,7 +38,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     queryset = models.Recipe.objects.all()
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('tags__slug', 'is_favorited', 'is_in_shopping_cart', )
+    filterset_fields = ('tags__slug', )
 
     def get_permissions(self):
         if self.action in ('list', 'retrieve'):
