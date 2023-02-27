@@ -161,7 +161,11 @@ class UserViewSet(viewsets.ModelViewSet):
         following = models.User.objects.filter(
             following__user=user
         )
-        serializer = self.get_serializer(following, many=True)
+        paginator = self.paginate_queryset(
+            queryset=following,
+            request=request
+        )
+        serializer = self.get_serializer(paginator, many=True)
         return self.get_paginated_response(serializer.data)
 
     @action(detail=True, methods=['post', 'delete'], name='follow')
