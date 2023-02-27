@@ -115,6 +115,8 @@ class RecipeSerializer(serializers.ModelSerializer):
         depth = 1
 
     def get_is_favorited(self, obj):
+        if isinstance(self.context['request'].user, AnonymousUser):
+            return False
         return (
             models.FavoriteRecipe.objects.filter(
                 user=self.context['request'].user,
@@ -123,6 +125,8 @@ class RecipeSerializer(serializers.ModelSerializer):
         )
 
     def get_is_in_shopping_cart(self, obj):
+        if isinstance(self.context['request'].user, AnonymousUser):
+            return False
         return (
             models.ShopRecipe.objects.filter(
                 user=self.context['request'].user,
