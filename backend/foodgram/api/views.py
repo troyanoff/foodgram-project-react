@@ -9,7 +9,7 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from api import filters, mixins, serializers
+from api import mixins, serializers
 from recipes import models
 
 
@@ -20,7 +20,8 @@ class IngredientViewSet(mixins.RetrieveListViewSet):
     serializer_class = serializers.IngredientListSerializer
     pagination_class = (None)
     permission_classes = (AllowAny, )
-    filter_class = filters.IngredientFilter
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('name', )
 
 
 class TagViewSet(mixins.RetrieveListViewSet):
@@ -37,7 +38,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     queryset = models.Recipe.objects.all()
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('tags__slug', )
+    filterset_fields = ('tags__slug', 'is_favorited', 'is_in_shopping_cart', )
 
     def get_permissions(self):
         if self.action in ('list', 'retrieve'):
@@ -124,10 +125,12 @@ class UserViewSet(viewsets.ModelViewSet):
         )
         if self.request.path in sub_path:
             return serializers.UserSubsrcibeSerializer
+        if self.action == 'create':
+            return serializers.UserCreateSerializer
         return serializers.UserSerializer
 
     def get_permissions(self):
-        if self.action in ('create', 'retrieve'):
+        if self.action == 'create':
             permission_classes = (AllowAny, )
         else:
             permission_classes = (IsAuthenticated, )
@@ -159,7 +162,7 @@ class UserViewSet(viewsets.ModelViewSet):
             following__user=user
         )
         serializer = self.get_serializer(following, many=True)
-        return Response(serializer.data)
+        return self.get_paginated_response(serializer.data)
 
     @action(detail=True, methods=['post', 'delete'], name='follow')
     def subscribe(self, request, pk=None):
