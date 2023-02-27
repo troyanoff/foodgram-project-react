@@ -5,8 +5,8 @@ from recipes import models
 
 class RecipeFilter(filters.FilterSet):
 
-    is_favorited = filters.NumberFilter(method='is_favorited')
-    is_in_shopping_cart = filters.NumberFilter(method='is_in_shopping_cart')
+    is_favorited = filters.BooleanFilter(method='is_favorited')
+    is_in_shopping_cart = filters.BooleanFilter(method='is_in_shopping_cart')
     tags = filters.CharFilter(field_name='tags__slug', lookup_expr='icontains')
     author = filters.CharFilter(
         field_name='author__id', lookup_expr='icontains')
