@@ -191,7 +191,7 @@ class UserViewSet(viewsets.ModelViewSet):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def get_token(request):
-    """Создание JWT-токена."""
+    """Создание токена."""
 
     email = request.data.get('email')
     password = request.data.get('password')
@@ -210,7 +210,7 @@ def get_token(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def logout_token(request):
-    """Создание JWT-токена."""
+    """Создание токена."""
     token = Token.objects.get(user=request.user)
     token.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
