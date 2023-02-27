@@ -41,7 +41,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         user = self.context['request'].user
-        if not isinstance(user, AnonymousUser):
+        if isinstance(user, AnonymousUser):
             return False
         following = models.Following.objects.filter(
             user=obj,
