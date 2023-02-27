@@ -9,7 +9,7 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from api import mixins, serializers
+from api import filters, mixins, serializers
 from recipes import models
 
 
@@ -38,7 +38,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     queryset = models.Recipe.objects.all()
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('tags__slug', )
+    filterset_class = filters.RecipeFilter
 
     def get_permissions(self):
         if self.action in ('list', 'retrieve'):
