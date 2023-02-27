@@ -107,7 +107,6 @@ class RecipeSerializer(serializers.ModelSerializer):
     ingredients = IngredientSerializer(many=True, read_only=True)
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
-    image = Base64ImageField(required=False, allow_null=True)
 
     class Meta:
         fields = '__all__'
@@ -147,6 +146,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         required=False,
         queryset=models.Tag.objects.all()
     )
+    image = Base64ImageField(required=False, allow_null=True)
 
     class Meta:
         fields = '__all__'
