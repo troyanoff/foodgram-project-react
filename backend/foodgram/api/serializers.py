@@ -283,7 +283,7 @@ class UserSubsrcibeSerializer(serializers.ModelSerializer):
         return following
 
     def get_recipes(self, obj):
-        limit = self.request.query_params.get('recipes_limit')
+        limit = self.context['request'].query_params.get('recipes_limit')
         if limit:
             return RecipeSerializer(
                 models.Recipe.objects.filter(author=obj),
