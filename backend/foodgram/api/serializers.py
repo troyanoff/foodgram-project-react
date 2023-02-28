@@ -44,8 +44,8 @@ class UserSerializer(serializers.ModelSerializer):
         if isinstance(user, AnonymousUser):
             return False
         following = models.Following.objects.filter(
-            user=obj,
-            author=user
+            user=user,
+            author=obj
         ).exists()
         return following
 
@@ -283,8 +283,9 @@ class UserSubsrcibeSerializer(serializers.ModelSerializer):
         return following
 
     def get_recipes(self, obj):
+        limit = self.self.request.query_params.get('limit_recipe')
         return RecipeSerializer(
-            models.Recipe.objects.filter(author=obj),
+            models.Recipe.objects.filter(author=obj)[:limit],
             many=True
         ).data
 

@@ -9,7 +9,7 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from api import filters, mixins, serializers
+from api import filters, mixins, serializers, paginators
 from recipes import models
 
 
@@ -21,7 +21,7 @@ class IngredientViewSet(mixins.RetrieveListViewSet):
     pagination_class = (None)
     permission_classes = (AllowAny, )
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('name', )
+    filterset_class = filters.IngredientFilter
 
 
 class TagViewSet(mixins.RetrieveListViewSet):
@@ -36,9 +36,23 @@ class TagViewSet(mixins.RetrieveListViewSet):
 class RecipeViewSet(viewsets.ModelViewSet):
     """Обработка операций с рецептами."""
 
-    queryset = models.Recipe.objects.all()
     filter_backends = (DjangoFilterBackend,)
-    filterset_class = filters.RecipeFilter
+    filterset_fields = ('tags__slug', 'author__id')
+    pagination_class = paginators.PageLimitPagination
+
+    def get_queryset(self):
+        favorite = self.request.query_params.get('is_favorited')
+        shop = self.request.query_params.get('is_in_shopping_cart')
+        queryset = models.Recipe.objects.all()
+        if favorite:
+            queryset = queryset.filter(
+                favorite_recipe__user=self.request.user
+            )
+        if shop:
+            queryset = queryset.filter(
+                shopping__user=self.request.user
+            )
+        return queryset
 
     def get_permissions(self):
         if self.action in ('list', 'retrieve'):

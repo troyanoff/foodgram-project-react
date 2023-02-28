@@ -30,3 +30,12 @@ class RecipeFilter(filters.FilterSet):
         if value:
             return queryset.filter(shopping__user=self.request.user)
         return queryset
+
+
+class IngredientFilter(filters.FilterSet):
+
+    class Meta:
+        model = models.Ingredient
+        fields = {
+            'name': ('icontains', )
+        }
