@@ -5,7 +5,11 @@ from recipes import models
 
 class RecipeFilter(filters.FilterSet):
 
-    tags = filters.CharFilter(field_name='tags__slug')
+    tags = filters.ModelMultipleChoiceFilter(
+        field_name='tags__slug',
+        to_field_name='slug',
+        queryset=models.Tag.objects.all()
+    )
     author = filters.NumberFilter(field_name='author__id')
 
     class Meta:

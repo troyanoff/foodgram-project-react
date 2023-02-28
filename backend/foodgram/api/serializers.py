@@ -286,9 +286,9 @@ class UserSubsrcibeSerializer(serializers.ModelSerializer):
         limit = self.self.request.query_params.get('recipes_limit')
         if limit:
             return RecipeSerializer(
-                models.Recipe.objects.filter(author=obj)[:limit],
+                models.Recipe.objects.filter(author=obj),
                 many=True
-            ).data
+            ).data[:limit]
         return RecipeSerializer(
             models.Recipe.objects.filter(author=obj),
             many=True
