@@ -283,16 +283,10 @@ class UserSubsrcibeSerializer(serializers.ModelSerializer):
         return following
 
     def get_recipes(self, obj):
-        limit = self.context['request'].query_params.get('recipes_limit')
-        if limit:
-            return RecipeSerializer(
-                models.Recipe.objects.filter(author=obj),
-                many=True
-            ).data[:limit]
         return RecipeSerializer(
             models.Recipe.objects.filter(author=obj),
             many=True
-        ).data
+        ).data[:3]
 
     def get_recipes_count(self, obj):
         return models.Recipe.objects.filter(author=obj).count()
