@@ -258,7 +258,7 @@ class UserSubsrcibeSerializer(serializers.ModelSerializer):
     """Сериализатор для пользователя после подписки."""
 
     is_subscribed = serializers.SerializerMethodField()
-    recipes = RecipeSerializer(read_only=True, many=True)
+    recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
     class Meta:
