@@ -294,7 +294,7 @@ class UserSubsrcibeSerializer(serializers.ModelSerializer):
         limit = self.context['request'].query_params.get('recipes_limit')
         if limit:
             return RecipeSubSerializer(
-                models.Recipe.objects.filter(author=obj)[:limit],
+                models.Recipe.objects.filter(author=obj)[:int(limit)],
                 many=True
             ).data
         return RecipeSubSerializer(
@@ -307,6 +307,7 @@ class UserSubsrcibeSerializer(serializers.ModelSerializer):
 
 
 class TokenSerializer(serializers.ModelSerializer):
+    """Проверка токена."""
 
     class Meta:
         fields = ('email', 'password')
