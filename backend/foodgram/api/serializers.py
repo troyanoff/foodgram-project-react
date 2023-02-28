@@ -254,6 +254,14 @@ class FollowingSerializer(serializers.ModelSerializer):
         return value
 
 
+class RecipeSubSerializer(serializers.ModelSerializer):
+    """Сериализатор рецептов."""
+
+    class Meta:
+        fields = ('id', 'name', 'image', 'cooking_time', )
+        model = models.Recipe
+
+
 class UserSubsrcibeSerializer(serializers.ModelSerializer):
     """Сериализатор для пользователя после подписки."""
 
@@ -283,10 +291,16 @@ class UserSubsrcibeSerializer(serializers.ModelSerializer):
         return following
 
     def get_recipes(self, obj):
-        return RecipeSerializer(
+        limit = self.context['request'].query_params.get('recipes_limit')
+        if limit:
+            return RecipeSubSerializer(
+                models.Recipe.objects.filter(author=obj),
+                many=True
+            ).data[:limit]
+        return RecipeSubSerializer(
             models.Recipe.objects.filter(author=obj),
             many=True
-        ).data[:3]
+        ).data
 
     def get_recipes_count(self, obj):
         return models.Recipe.objects.filter(author=obj).count()
