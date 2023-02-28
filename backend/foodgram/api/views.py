@@ -37,7 +37,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """Обработка операций с рецептами."""
 
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = filters.RecipeFilter
+    filterset_class = filters.RecipeFilter
     pagination_class = paginators.PageLimitPagination
 
     def get_queryset(self):
