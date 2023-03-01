@@ -1,13 +1,13 @@
 ### FOODGRAM
-![![Foodgram workflow](https://github.com/troyanoff/foodgram-project-react/actions/workflows/foodgram_workflow.yml/badge.svg)](https://github.com/troyanoff/foodgram-project-react/actions/workflows/foodgram_workflow.yml)
+![![Foodgram workflow](https://github.com/troyanoff/foodgram-project-react/actions/workflows/foodgram_workflow.yml/badge.svg)
 
-#http://62.84.127.80/
+# http://62.84.127.80/
 # Админ
-#login:admin
-#password:admin
+# login:admin
+# password:admin
 # Пользователь
-#login: aa@aa.aa
-#password: 25802580z
+# login: aa@aa.aa
+# password: 25802580z
 
 
 ## Описание
@@ -34,9 +34,7 @@ DB_PORT=5432
 
 - Выполнить команду по развертыванию контейнера:
 
-```sudo docker-compose up```
-
-> Теперь ваш терминал будет обрабатывать контейнер, поэтому следующие команды выполняйте параллельно открыв второй терминал в деректории infra/
+```sudo docker-compose up -d```
 
 - Выполнить команду для сбора статики:
 
