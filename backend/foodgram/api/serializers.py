@@ -77,6 +77,13 @@ class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('id', 'name', 'measurement_unit', 'amount')
         model = models.Amount
+        
+    def validate_amount(self, value):
+        if value < 0:
+            raise serializers.ValidationError(
+                'Количество ингредиента не может быть отрицательным!'
+            )
+        return value
 
 
 class IngredientListSerializer(serializers.ModelSerializer):
@@ -166,6 +173,13 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         if len(id_list) != len(set(id_list)):
             raise serializers.ValidationError(
                 'Нельзя добавлять одинаковые ингредиенты!'
+            )
+        return value
+    
+    def validate_cooking_time(self, value):
+        if value < 0:
+            raise serializers.ValidationError(
+                'Время приготовления не может быть отрицательным!'
             )
         return value
 
