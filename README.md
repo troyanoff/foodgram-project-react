@@ -1,14 +1,6 @@
 ### FOODGRAM
 ![Foodgram workflow](https://github.com/troyanoff/foodgram-project-react/actions/workflows/foodgram_workflow.yml/badge.svg)
 
- http://62.84.127.80/
- Админ
- login:admin
- password:admin
- Пользователь
- login: aa@aa.aa
- password: 25802580z
-
 
 ## Описание
 
